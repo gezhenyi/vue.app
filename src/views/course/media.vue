@@ -78,6 +78,8 @@
           <span>{{ scope.row.sub_count }}</span>
         </template>
       </el-table-column>
+
+
       <el-table-column
         align="center"
         label="状态"
@@ -85,7 +87,9 @@
         class-name="status-col"
       >
         <template slot-scope="scope">
-          <span>{{ scope.row.status ? "已上架" : "已下架" }}</span>
+          <el-tag :type="scope.row.status ? 'success':'danger' ">
+            {{ scope.row.status ? "已上架" : "已下架" }}
+          </el-tag>
         </template>
       </el-table-column>
       <el-table-column align="center" label="创建时间" width="200">
@@ -103,12 +107,11 @@
             编辑
           </el-button>
           <el-button
-            v-if="row.status != 'published'"
             size="mini"
-            type="success"
-            @click="handleModifyStatus(row, 'published')"
+            :type="row.status? '':'success'"
+            @click="handleModifyStatus(row, row.status)"
           >
-            下架
+            {{row.status? "下架":"上架"}}
           </el-button>
           <el-button
             v-if="row.status != 'deleted'"
@@ -130,18 +133,22 @@
       @pagination="getList"
     />
 
-    <el-dialog :title="textMap[dialogStatus]" :visible.sync="dialogFormVisible">
+    <el-dialog :title="textMap[dialogStatus]" :visible.sync="dialogFormVisible" fullscreen>
       <el-form
         ref="dataForm"
         :rules="rules"
         :model="temp"
         label-position="left"
-        label-width="70px"
-        style="width: 600px; margin-left: 50px"
+        label-width="80px"
+        style="width: 700px; margin-left: 50px"
       >
         <el-form-item label="标题" prop="title">
           <el-input v-model="temp.title" />
         </el-form-item>
+
+       <el-form-item label="封面" >
+      <dropzone id="myVueDropzone" url="https://httpbin.org/post" @dropzone-removedFile="dropzoneR" @dropzone-success="dropzoneS" />
+         </el-form-item>
 
         <el-form-item label="试看内容" prop="try" style="margin-bottom: 30px">
           <Tinymce ref="editor" v-model="temp.try" :height="300" />
@@ -179,6 +186,7 @@
 </template>
 
 <script>
+import Dropzone from '@/components/Dropzone'
 import { fetchList, deleteMedia, updateMedia, createMedia } from "@/api/media";
 import Tinymce from "@/components/Tinymce";
 import waves from "@/directive/waves"; // waves directive
@@ -187,7 +195,8 @@ import Pagination from "@/components/Pagination"; // secondary package based on 
 
 export default {
   name: "ComplexTable",
-  components: { Pagination, Tinymce },
+  name: 'DropzoneDemo',
+  components: { Pagination, Tinymce,Dropzone },
   directives: { waves },
   filters: {
     statusFilter(status) {
@@ -233,17 +242,17 @@ export default {
       dialogFormVisible: false,
       dialogStatus: "",
       textMap: {
-        update: "Edit",
-        create: "Create",
+        update: "编辑",
+        create: "新增",
       },
       dialogPvVisible: false,
       pvData: [],
       rules: {
         title: [
-          { required: true, message: "title is required", trigger: "blur" },
+          { required: true, message: "title必须要填哦", trigger: "blur" },
         ],
-        trySee: [
-          { required: true, message: "试看 is required", trigger: "blur" },
+        try: [
+          { required: true, message: "必须要填哦", trigger: "blur" },
         ],
       },
       downloadLoading: false,
@@ -266,6 +275,15 @@ export default {
         }, 1.5 * 1000);
       });
     },
+    //添加图片插件
+    dropzoneS(file) {
+      console.log(file)
+      this.$message({ message: 'Upload success', type: 'success' })
+    },
+    dropzoneR(file) {
+      console.log(file)
+      this.$message({ message: 'Delete success', type: 'success' })
+    },
     handleFilter() {
       this.listQuery.page = 1;
       this.getList();
@@ -275,7 +293,7 @@ export default {
         message: "操作成功",
         type: "success",
       });
-      row.status = status;
+      row.status = !status;
     },
     sortChange(data) {
       const { prop, order } = data;
@@ -344,7 +362,7 @@ export default {
         if (valid) {
           const tempData = Object.assign({}, this.temp);
           tempData.timestamp = +new Date(tempData.timestamp); // change Thu Nov 30 2017 16:41:05 GMT+0800 (CST) to 1512031311464
-          updateArticle(tempData).then(() => {
+          updateMedia(tempData).then(() => {
             const index = this.list.findIndex((v) => v.id === this.temp.id);
             this.list.splice(index, 1, this.temp);
             this.dialogFormVisible = false;
