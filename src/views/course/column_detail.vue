@@ -1,5 +1,28 @@
 <template>
   <div class="app-container">
+    <el-card class="box-card" style="margin-bottom:20px">
+      <div style="display: flex">
+          <img :src="detail.cover" style="width: 200px; height: 100px; margin-right: 30px;">
+          <div style="flex: 1;">
+                    <div style="display: flex;justify-content: space-between;">
+                        <h4 style="margin-top: 5px;margin-bottom: 0;">{{detail.title}}</h4>
+                        <small style="color: #bbbbbb;">{{ detail.isend ? '已完结' : '连载中' }}</small>
+                    </div>
+                    <p style="margin: 8px 0;">
+                        <small style="color: #bbbbbb;">{{ detail.try }}</small>
+                    </p>
+                    <p>
+                        <small style="color: red;">￥{{ detail.price }}</small>
+                    </p>
+                    <el-button-group >
+                        <el-button size="small" type="warning" @click="changeDetailStatus">
+                            {{ detail.status ? '下架' : '上架' }}
+                        </el-button>
+                        <el-button size="small" type="default" @click="changeDetailIsend">设为{{ detail.isend ? '连载中' : '已完结' }}</el-button>
+                    </el-button-group>
+                </div>
+      </div>
+    </el-card>
     <div class="filter-container">
       <el-button
         class="filter-item"
@@ -8,13 +31,13 @@
         icon="el-icon-edit"
         @click="handleCreate"
       >
-        新增音频
+        新增目录
       </el-button>
       <el-select
         v-model="listQuery.importance"
         placeholder="商品状态"
         clearable
-        style="width: 90px; margin-left: 900px"
+        style="width: 90px; margin-left: 1100px"
         class="filter-item"
       >
         <el-option
@@ -58,7 +81,7 @@
           <span>{{ row.id }}</span>
         </template>
       </el-table-column>
-      <el-table-column align="left" label="音频内容" width="600">
+      <el-table-column align="left" label="单品内容" width="1100">
         <template slot-scope="scope">
           <div>
             <img
@@ -73,7 +96,8 @@
           </div>
         </template>
       </el-table-column>
-      <el-table-column align="center" label="订阅量" width="100">
+
+      <el-table-column align="center" label="订阅量" width="80">
         <template slot-scope="scope">
           <span>{{ scope.row.sub_count }}</span>
         </template>
@@ -82,18 +106,13 @@
       <el-table-column
         align="center"
         label="状态"
-        width="120"
+        width="100"
         class-name="status-col"
       >
         <template slot-scope="scope">
           <el-tag :type="scope.row.status ? 'success' : 'danger'">
             {{ scope.row.status ? "已上架" : "已下架" }}
           </el-tag>
-        </template>
-      </el-table-column>
-      <el-table-column align="center" label="创建时间" width="200">
-        <template slot-scope="scope">
-          <span>{{ scope.row.updated_time }}</span>
         </template>
       </el-table-column>
       <el-table-column
@@ -104,13 +123,6 @@
         <template slot-scope="{ row, $index }">
           <el-button type="primary" size="mini" @click="handleUpdate(row)">
             编辑
-          </el-button>
-          <el-button
-            size="mini"
-            :type="row.status ? '' : 'success'"
-            @click="handleModifyStatus(row, row.status)"
-          >
-            {{ row.status ? "下架" : "上架" }}
           </el-button>
           <el-button
             v-if="row.status != 'deleted'"
@@ -133,94 +145,68 @@
     />
 
     <el-dialog
+      lock-scroll=false
       :title="textMap[dialogStatus]"
       :visible.sync="dialogFormVisible"
-      fullscreen
+     width="60%"
+     
     >
-      <el-form
-        ref="dataForm"
-        :rules="rules"
-        :model="temp"
-        label-position="left"
-        label-width="80px"
-        style="width: 700px; margin-left: 50px"
-      >
-        <el-form-item label="标题" prop="title">
-          <el-input v-model="temp.title" />
-        </el-form-item>
-
-        <el-form-item label="封面">
-          <dropzone
-            id="myVueDropzone"
-            url="https://httpbin.org/post"
-            @dropzone-removedFile="dropzoneR"
-            @dropzone-success="dropzoneS"
-          />
-        </el-form-item>
-
-        <el-form-item label="试看内容" prop="try" style="margin-bottom: 30px">
-          <Tinymce ref="editor" v-model="temp.try" :height="300" />
-        </el-form-item>
-        <el-form-item label="课程内容" style="margin-bottom: 30px">
-          <el-upload
-            class="upload-demo"
-            action="https://jsonplaceholder.typicode.com/posts/"
-            :on-preview="handlePreview"
-            :on-remove="handleRemove"
-            :before-remove="beforeRemove"
-            multiple
-            :limit="3"
-            :on-exceed="handleExceed"
-            :file-list="fileList"
-            accept="mp3"
-          >
-            <el-button size="small" type="primary">点击上传</el-button>
-            <div slot="tip" class="el-upload__tip">
-              只能上传mp3、mp4文件，且不超过500M
-            </div>
-          </el-upload>
-        </el-form-item>
-
-        <el-form-item label="课程价格" style="margin-bottom: 30px">
-          <template>
-            <el-input-number v-model="temp.t_price" :min="0" />
-          </template>
-        </el-form-item>
-
-        <el-form-item label="状态" style="margin-bottom: 30px">
-          <template>
-            <el-radio-group v-model="temp.status">
-              <el-radio :label="0">下架</el-radio>
-              <el-radio :label="1">上架</el-radio>
-            </el-radio-group>
-          </template>
-        </el-form-item>
-      </el-form>
-      <div slot="footer" class="dialog-footer">
-        <el-button @click="dialogFormVisible = false"> 取消 </el-button>
-        <el-button
-          type="primary"
-          @click="dialogStatus === 'create' ? createData() : updateData()"
-        >
-          提交
-        </el-button>
-      </div>
+     <el-tabs tab-position="left" style="height:500px;">
+    <el-tab-pane label="图文" >
+                      <el-table
+                          :key="tableKey"
+                          v-loading="listLoading"
+                          :data="list"
+                          border
+                          fit
+                          highlight-current-row
+                          style="width: 100%"
+                          @sort-change="sortChange"
+                        >
+                          <el-table-column
+                            type="selection"
+                            width="55">
+                          </el-table-column>
+                          <el-table-column align="left" label="内容" >
+                            <template slot-scope="scope">
+                              <div>
+                                <img
+                                  style="float: left "
+                                  :src="scope.row.cover"
+                                  height="50px"
+                                  width="100px"
+                                  alt=""
+                                />
+                                <div>  {{scope.row.title }}</div>
+                                <div style="color: red">  ￥{{ scope.row.price }}</div>
+                              </div>
+                            </template>
+                          </el-table-column>
+                        </el-table>
+    </el-tab-pane>
+    <el-tab-pane label="音频">配置管理</el-tab-pane>
+    <el-tab-pane label="视频">角色管理</el-tab-pane>
+  </el-tabs>
+   <pagination
+      v-show="total > 0"
+      :total="total"
+      :page.sync="listQuery.page"
+      :limit.sync="listQuery.limit"
+      @pagination="getList"
+    />
     </el-dialog>
   </div>
 </template>
 
 <script>
-import Dropzone from "@/components/Dropzone";
-import { fetchList, deleteMedia, updateMedia, createMedia } from "@/api/media";
-import Tinymce from "@/components/Tinymce";
+import {fetchList,fetchDetail, fetchDetailCourse,createColumn } from "@/api/column.js";
 import waves from "@/directive/waves"; // waves directive
 import { parseTime } from "@/utils";
 import Pagination from "@/components/Pagination"; // secondary package based on el-pagination
 
 export default {
   name: "ComplexTable",
-  name: "DropzoneDemo",
-  components: { Pagination, Tinymce, Dropzone },
+  components: { Pagination },
   directives: { waves },
   filters: {
     statusFilter(status) {
@@ -237,6 +223,19 @@ export default {
   },
   data() {
     return {
+      detail: {
+        content: "",
+        cover: "",
+        created_time: "",
+        id: 0,
+        isend: 0,
+        price: 0,
+        status: 1,
+        sub_count: 0,
+        title: "",
+        try: "",
+        updated_time: "",
+      },
       tableKey: 0,
       list: null,
       total: 0,
@@ -248,7 +247,6 @@ export default {
         title: undefined,
         type: undefined,
         sort: "+id",
-        fileList: [{name: 'food.mp3', url: 'https://fuss10.elemecdn.com/3/63/4e7f3a15429bfda99bce42a18cdd1jpeg.jpeg?imageMogr2/thumbnail/360x360/format/webp/quality/100'}]
       },
       importanceOptions: [1, 2, 3],
       sortOptions: [
@@ -268,7 +266,7 @@ export default {
       dialogStatus: "",
       textMap: {
         update: "编辑",
-        create: "新增",
+        create: "选择课程",
       },
       dialogPvVisible: false,
       pvData: [],
@@ -283,43 +281,45 @@ export default {
   },
   created() {
     this.getList();
+    this.getData();
+    console.log(res);
   },
   methods: {
     getList() {
       this.listLoading = true;
       fetchList(this.listQuery).then((response) => {
-        console.log(response.data);
         this.list = response.data.items;
         this.total = response.data.total;
-
         // Just to simulate the time of the request
         setTimeout(() => {
           this.listLoading = false;
         }, 1.5 * 1000);
       });
     },
-    //添加音频组件
-    handleRemove(file, fileList) {
-        console.log(file, fileList);
-      },
-      handlePreview(file) {
-        console.log(file);
-      },
-      handleExceed(files, fileList) {
-        this.$message.warning(`当前限制选择 3 个文件，本次选择了 ${files.length} 个文件，共选择了 ${files.length + fileList.length} 个文件`);
-      },
-      beforeRemove(file, fileList) {
-        return this.$confirm(`确定移除 ${ file.name }？`);
-      },
-    
-    //添加图片插件
-    dropzoneS(file) {
-      console.log(file);
-      this.$message({ message: "Upload success", type: "success" });
+    //目录切换状态
+    changeDetailStatus(){
+                this.detail.status = !this.detail.status 
+            },
+            changeDetailIsend(){
+                this.detail.isend = !this.detail.isend 
+            },
+    getData() {
+      fetchDetail({
+        id: this.$route.query.id,
+      }).then((res) => {
+        console.log(res);
+        this.detail = res.data;
+      });
+      console.log(res.data);
     },
-    dropzoneR(file) {
-      console.log(file);
-      this.$message({ message: "Delete success", type: "success" });
+    //目录跳转
+    handmulu(row) {
+      this.$router.push({
+        path: "/course/column_detail",
+        query: {
+          id: row.id,
+        },
+      });
     },
     handleFilter() {
       this.listQuery.page = 1;

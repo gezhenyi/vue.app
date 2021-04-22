@@ -1,3 +1,15 @@
 1.组件注册但是不实用属于eslint错误。关闭eslint错误
 // lintOnSave: process.env.NODE_ENV === 'development',
 改为lintOnSave:false,
+
+2.get传参：
+@click="handmulu(row)
+
+handmulu(row) {
+    this.$router.push({
+      path: "/course/column_detail",
+      query: {
+        id: row.id,
+      },
+    });
+  },

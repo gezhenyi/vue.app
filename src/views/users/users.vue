@@ -1,14 +1,14 @@
 <template>
   <div class="app-container">
-    <div class="filter-container">
+   <div class="filter-container">
       <el-button
         class="filter-item"
         style="margin-left: 10px"
-        type="primary"
+        type="danger"
         icon="el-icon-edit"
         @click="handleCreate"
       >
-        新增音频
+        黑名单设置
       </el-button>
       <el-select
         v-model="listQuery.importance"
@@ -53,47 +53,33 @@
       style="width: 100%"
       @sort-change="sortChange"
     >
-      <el-table-column label="ID" sortable="custom" align="center" width="100">
-        <template slot-scope="{ row }">
-          <span>{{ row.id }}</span>
-        </template>
-      </el-table-column>
-      <el-table-column align="left" label="音频内容" width="600">
+     <el-table-column
+      type="selection"
+      width="55">
+    </el-table-column>
+      <el-table-column align="left" label="用户" width="600">
         <template slot-scope="scope">
           <div>
             <img
-              style="float: left"
-              :src="scope.row.cover"
+              style="float: left;border-radius:50%"
+              :src="scope.row.user.avatar"
               height="50px"
-              width="100px"
-              alt=""
+              width="50px"
+              alt=""      
             />
-            <div>{{ scope.row.title }}</div>
-            <div style="color: red">￥{{ scope.row.price }}</div>
+            <div>{{ scope.row.user.username }}</div>
           </div>
         </template>
       </el-table-column>
-      <el-table-column align="center" label="订阅量" width="100">
+      <el-table-column align="center" label="消费总额" width="100">
         <template slot-scope="scope">
-          <span>{{ scope.row.sub_count }}</span>
+          <span>{{ scope.row.total_consume }}</span>
         </template>
       </el-table-column>
 
-      <el-table-column
-        align="center"
-        label="状态"
-        width="120"
-        class-name="status-col"
-      >
-        <template slot-scope="scope">
-          <el-tag :type="scope.row.status ? 'success' : 'danger'">
-            {{ scope.row.status ? "已上架" : "已下架" }}
-          </el-tag>
-        </template>
-      </el-table-column>
       <el-table-column align="center" label="创建时间" width="200">
         <template slot-scope="scope">
-          <span>{{ scope.row.updated_time }}</span>
+          <span>{{ scope.row.created_time }}</span>
         </template>
       </el-table-column>
       <el-table-column
@@ -103,14 +89,10 @@
       >
         <template slot-scope="{ row, $index }">
           <el-button type="primary" size="mini" @click="handleUpdate(row)">
-            编辑
+            详情
           </el-button>
-          <el-button
-            size="mini"
-            :type="row.status ? '' : 'success'"
-            @click="handleModifyStatus(row, row.status)"
-          >
-            {{ row.status ? "下架" : "上架" }}
+           <el-button type="success" size="mini">
+            联系用户
           </el-button>
           <el-button
             v-if="row.status != 'deleted'"
@@ -132,11 +114,7 @@
       @pagination="getList"
     />
 
-    <el-dialog
-      :title="textMap[dialogStatus]"
-      :visible.sync="dialogFormVisible"
-      fullscreen
-    >
+    <el-dialog :title="textMap[dialogStatus]" :visible.sync="dialogFormVisible" fullscreen>
       <el-form
         ref="dataForm"
         :rules="rules"
@@ -149,36 +127,15 @@
           <el-input v-model="temp.title" />
         </el-form-item>
 
-        <el-form-item label="封面">
-          <dropzone
-            id="myVueDropzone"
-            url="https://httpbin.org/post"
-            @dropzone-removedFile="dropzoneR"
-            @dropzone-success="dropzoneS"
-          />
-        </el-form-item>
+       <el-form-item label="封面" >
+      
+         </el-form-item>
 
         <el-form-item label="试看内容" prop="try" style="margin-bottom: 30px">
-          <Tinymce ref="editor" v-model="temp.try" :height="300" />
+      
         </el-form-item>
         <el-form-item label="课程内容" style="margin-bottom: 30px">
-          <el-upload
-            class="upload-demo"
-            action="https://jsonplaceholder.typicode.com/posts/"
-            :on-preview="handlePreview"
-            :on-remove="handleRemove"
-            :before-remove="beforeRemove"
-            multiple
-            :limit="3"
-            :on-exceed="handleExceed"
-            :file-list="fileList"
-            accept="mp3"
-          >
-            <el-button size="small" type="primary">点击上传</el-button>
-            <div slot="tip" class="el-upload__tip">
-              只能上传mp3、mp4文件，且不超过500M
-            </div>
-          </el-upload>
+     
         </el-form-item>
 
         <el-form-item label="课程价格" style="margin-bottom: 30px">
@@ -210,17 +167,14 @@
 </template>
 
 <script>
-import Dropzone from "@/components/Dropzone";
-import { fetchList, deleteMedia, updateMedia, createMedia } from "@/api/media";
-import Tinymce from "@/components/Tinymce";
+import { fetchList, deleteMedia, updateMedia, createMedia } from "@/api/user";
 import waves from "@/directive/waves"; // waves directive
 import { parseTime } from "@/utils";
 import Pagination from "@/components/Pagination"; // secondary package based on el-pagination
 
 export default {
   name: "ComplexTable",
-  name: "DropzoneDemo",
-  components: { Pagination, Tinymce, Dropzone },
+  components: { Pagination},
   directives: { waves },
   filters: {
     statusFilter(status) {
@@ -248,7 +202,6 @@ export default {
         title: undefined,
         type: undefined,
         sort: "+id",
-        fileList: [{name: 'food.mp3', url: 'https://fuss10.elemecdn.com/3/63/4e7f3a15429bfda99bce42a18cdd1jpeg.jpeg?imageMogr2/thumbnail/360x360/format/webp/quality/100'}]
       },
       importanceOptions: [1, 2, 3],
       sortOptions: [
@@ -276,7 +229,9 @@ export default {
         title: [
           { required: true, message: "title必须要填哦", trigger: "blur" },
         ],
-        try: [{ required: true, message: "必须要填哦", trigger: "blur" }],
+        try: [
+          { required: true, message: "必须要填哦", trigger: "blur" },
+        ],
       },
       downloadLoading: false,
     };
@@ -297,29 +252,6 @@ export default {
           this.listLoading = false;
         }, 1.5 * 1000);
       });
-    },
-    //添加音频组件
-    handleRemove(file, fileList) {
-        console.log(file, fileList);
-      },
-      handlePreview(file) {
-        console.log(file);
-      },
-      handleExceed(files, fileList) {
-        this.$message.warning(`当前限制选择 3 个文件，本次选择了 ${files.length} 个文件，共选择了 ${files.length + fileList.length} 个文件`);
-      },
-      beforeRemove(file, fileList) {
-        return this.$confirm(`确定移除 ${ file.name }？`);
-      },
-    
-    //添加图片插件
-    dropzoneS(file) {
-      console.log(file);
-      this.$message({ message: "Upload success", type: "success" });
-    },
-    dropzoneR(file) {
-      console.log(file);
-      this.$message({ message: "Delete success", type: "success" });
     },
     handleFilter() {
       this.listQuery.page = 1;
@@ -399,7 +331,7 @@ export default {
         if (valid) {
           const tempData = Object.assign({}, this.temp);
           tempData.timestamp = +new Date(tempData.timestamp); // change Thu Nov 30 2017 16:41:05 GMT+0800 (CST) to 1512031311464
-          updateArticle(tempData).then(() => {
+          updateMedia(tempData).then(() => {
             const index = this.list.findIndex((v) => v.id === this.temp.id);
             this.list.splice(index, 1, this.temp);
             this.dialogFormVisible = false;

@@ -58,7 +58,7 @@
           <span>{{ row.id }}</span>
         </template>
       </el-table-column>
-      <el-table-column align="left" label="图文内容" width="600">
+      <el-table-column align="left" label="视频内容" width="600">
         <template slot-scope="scope">
           <div>
             <img

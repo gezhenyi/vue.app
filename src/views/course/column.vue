@@ -1,6 +1,6 @@
 <template>
   <div class="app-container">
-   <div class="filter-container">
+    <div class="filter-container">
       <el-button
         class="filter-item"
         style="margin-left: 10px"
@@ -58,7 +58,7 @@
           <span>{{ row.id }}</span>
         </template>
       </el-table-column>
-      <el-table-column align="left" label="图文内容" width="600">
+      <el-table-column align="left" label="专栏内容" width="600">
         <template slot-scope="scope">
           <div>
             <img
@@ -80,7 +80,7 @@
         class-name="status-col"
       >
         <template slot-scope="scope">
-          <el-tag :type="scope.row.status ? 'success':'danger' ">
+          <el-tag :type="scope.row.status ? 'success' : 'danger'">
             {{ scope.row.status ? "已上架" : "已下架" }}
           </el-tag>
         </template>
@@ -91,7 +91,6 @@
         </template>
       </el-table-column>
 
-
       <el-table-column
         align="center"
         label="状态"
@@ -99,7 +98,7 @@
         class-name="status-col"
       >
         <template slot-scope="scope">
-          <el-tag :type="scope.row.status ? 'success':'danger' ">
+          <el-tag :type="scope.row.status ? 'success' : 'danger'">
             {{ scope.row.status ? "已上架" : "已下架" }}
           </el-tag>
         </template>
@@ -115,22 +114,18 @@
         class-name="small-padding fixed-width"
       >
         <template slot-scope="{ row, $index }">
-            <el-button
-            size="mini"
-            type="warning"
-            @click="handleModifyStatus(row, row.status)"
-          >
-           目录
+          <el-button size="mini" type="warning" @click="handmulu(row)">
+            目录
           </el-button>
           <el-button type="primary" size="mini" @click="handleUpdate(row)">
             编辑
           </el-button>
           <el-button
             size="mini"
-            :type="row.status? '':'success'"
+            :type="row.status ? '' : 'success'"
             @click="handleModifyStatus(row, row.status)"
           >
-            {{row.status? "下架":"上架"}}
+            {{ row.status ? "下架" : "上架" }}
           </el-button>
           <el-button
             v-if="row.status != 'deleted'"
@@ -152,7 +147,11 @@
       @pagination="getList"
     />
 
-    <el-dialog :title="textMap[dialogStatus]" :visible.sync="dialogFormVisible" fullscreen>
+    <el-dialog
+      :title="textMap[dialogStatus]"
+      :visible.sync="dialogFormVisible"
+      fullscreen
+    >
       <el-form
         ref="dataForm"
         :rules="rules"
@@ -165,9 +164,14 @@
           <el-input v-model="temp.title" />
         </el-form-item>
 
-       <el-form-item label="封面" >
-      <dropzone id="myVueDropzone" url="https://httpbin.org/post" @dropzone-removedFile="dropzoneR" @dropzone-success="dropzoneS" />
-         </el-form-item>
+        <el-form-item label="封面">
+          <dropzone
+            id="myVueDropzone"
+            url="https://httpbin.org/post"
+            @dropzone-removedFile="dropzoneR"
+            @dropzone-success="dropzoneS"
+          />
+        </el-form-item>
 
         <el-form-item label="试看内容" prop="try" style="margin-bottom: 30px">
           <Tinymce ref="editor" v-model="temp.try" :height="300" />
@@ -205,8 +209,8 @@
 </template>
 
 <script>
-import Dropzone from '@/components/Dropzone'
-import { fetchList, deleteMedia, updateMedia, createMedia } from "@/api/media";
+import Dropzone from "@/components/Dropzone";
+import { fetchList, deleteColumn, updateColumn, createColumn } from "@/api/column";
 import Tinymce from "@/components/Tinymce";
 import waves from "@/directive/waves"; // waves directive
 import { parseTime } from "@/utils";
@@ -214,8 +218,8 @@ import Pagination from "@/components/Pagination"; // secondary package based on 
 
 export default {
   name: "ComplexTable",
-  name: 'DropzoneDemo',
-  components: { Pagination, Tinymce,Dropzone },
+  name: "DropzoneDemo",
+  components: { Pagination, Tinymce, Dropzone },
   directives: { waves },
   filters: {
     statusFilter(status) {
@@ -270,9 +274,7 @@ export default {
         title: [
           { required: true, message: "title必须要填哦", trigger: "blur" },
         ],
-        try: [
-          { required: true, message: "必须要填哦", trigger: "blur" },
-        ],
+        try: [{ required: true, message: "必须要填哦", trigger: "blur" }],
       },
       downloadLoading: false,
     };
@@ -294,14 +296,23 @@ export default {
         }, 1.5 * 1000);
       });
     },
+    //目录跳转
+    handmulu(row) {
+      this.$router.push({
+        path: "/course/column_detail",
+        query: {
+          id: row.id,
+        },
+      });
+    },
     //添加图片插件
     dropzoneS(file) {
-      console.log(file)
-      this.$message({ message: 'Upload success', type: 'success' })
+      console.log(file);
+      this.$message({ message: "Upload success", type: "success" });
     },
     dropzoneR(file) {
-      console.log(file)
-      this.$message({ message: 'Delete success', type: 'success' })
+      console.log(file);
+      this.$message({ message: "Delete success", type: "success" });
     },
     handleFilter() {
       this.listQuery.page = 1;
@@ -353,7 +364,7 @@ export default {
           this.temp.id = parseInt(Math.random() * 100) + 1024; // mock a id
           this.temp.author = "vue-element-admin";
 
-          createMedia(this.temp).then(() => {
+          createColumn(this.temp).then(() => {
             console.log(222222222222222222222222);
             this.list.unshift(this.temp);
             this.dialogFormVisible = false;
@@ -396,7 +407,7 @@ export default {
       });
     },
     handleDelete(row, index) {
-      // deleteMedia
+      // deleteColumn
       this.$notify({
         title: "Success",
         message: "Delete Successfully",

@@ -143,10 +143,29 @@ export const asyncRoutes = [
         meta: {
           title: '专栏',
         }
+      },{
+        hidden:true,
+        path: 'column_detail',
+        component: () => import('@/views/course/column_detail'),
+        name: 'ColumnDetail',
+        meta: {
+          title: '专栏详情',
+        }
       },
     ]
   },
-
+  {
+    path: '/user',
+    component: Layout,
+    children: [
+      {
+        path: 'user',
+        component: () => import('@/views/users/users'),
+        name: 'users',
+        meta: { title: '用户', icon: 'user', noCache: true }
+      }
+    ]
+  },
 
   // {
   //   path: '/permission',
